@@ -28,3 +28,12 @@ def test_no_settlement_means_back_to_idle():
   m.start(card)
   assert m.get_shortage() == 0
   assert m.is_settling() is False
+
+def test_positive_shortage_requires_settlement():
+  fares = {"A": 180}
+  card = ICCard(entry_station="A", balance=100)
+  m = FareMachine(fares)
+
+  m.start(card)
+  assert m.is_settling() is True
+  assert m.get_shortage() == 80
