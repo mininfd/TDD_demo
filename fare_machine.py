@@ -17,5 +17,7 @@ class FareMachine:
     if shortage <= 0:
       shortage = 0
       self._settling = False
+      return False
 
+    self._settling = True
     self._shortage = shortage
