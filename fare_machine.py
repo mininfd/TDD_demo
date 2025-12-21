@@ -10,4 +10,7 @@ class FareMachine:
     fare = self._fares[card.entry_station]
     shortage = fare - card.balance
 
+    if shortage <= 0:
+      shortage = 0
+
     self._shortage = shortage
