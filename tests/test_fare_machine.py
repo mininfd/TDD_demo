@@ -37,3 +37,15 @@ def test_positive_shortage_requires_settlement():
   m.start(card)
   assert m.is_settling() is True
   assert m.get_shortage() == 80
+
+def test_cannot_charge_when_settlement_not_needed():
+  fares = {"A": 180}
+  card = ICCard(entry_station="A", balance=300)  # shortage=0
+  m = FareMachine(fares)
+
+  m.start(card)  # idleに戻る
+  canIcharge = m.charge(100)
+
+  assert canIcharge is False
+  assert card.balance == 300
+  assert m.is_settling() is False
