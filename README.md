@@ -185,6 +185,7 @@ fare_machine.py
 
 ```diff
 @@ def start(self, card):
+
       self._settling = False
 +     return False
 
@@ -295,6 +296,7 @@ fare_machine.py
 
 ```diff
 @@ def __init__(self, fares: dict[str, int]):
+
     self._settling = False
 +   self._card = None
 +   self._reset()
@@ -305,6 +307,7 @@ fare_machine.py
 +   self.card = None
 
 @@ def start(self, card):
+
     self._settling = False
     return False
 
@@ -320,3 +323,20 @@ fare_machine.py
 +   return True
 ```
 
+#### リファクタリング
+
+_reset()を精算不要時の初期化に利用
+
+作成したコード差分
+
+fare_machine.py
+
+```diff
+@@ def start(self, card):
+
+    if shortage <= 0:
+-     self._shortage = 0
+-     self._settling = False
++     self._reset()
+      return False
+```
