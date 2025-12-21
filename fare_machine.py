@@ -21,3 +21,7 @@ class FareMachine:
 
     self._settling = True
     self._shortage = shortage
+
+  def charge(self, amount: int) -> bool:
+    if not self._settling:
+      return False
