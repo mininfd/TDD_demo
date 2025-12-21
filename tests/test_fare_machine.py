@@ -61,3 +61,28 @@ def test_insufficient_payment_does_not_charge_and_stays_settling():
   assert card.balance == 100
   assert m.is_settling() is True
   assert m.get_shortage() == 80
+
+def test_enough_payment_charges_and_back_to_idle_exact():
+  fares = {"A": 180}
+  card = ICCard(entry_station="A", balance=100)  # shortage=80
+  m = FareMachine(fares)
+  m.start(card)
+
+  canIcharge= m.charge(80)
+  assert canIcharge is True
+  assert card.balance == 180  # 100+80
+  assert m.is_settling() is False
+  assert m.get_shortage() == 0
+
+
+def test_enough_payment_charges_and_back_to_idle_overpay():
+  fares = {"A": 180}
+  card = ICCard(entry_station="A", balance=100)  # shortage=80
+  m = FareMachine(fares)
+  m.start(card)
+
+  canIcharge= m.charge(100)
+  assert canIcharge is True
+  assert card.balance == 200  # 100+100
+  assert m.is_settling() is False
+  assert m.get_shortage() == 0
