@@ -22,8 +22,7 @@ class FareMachine:
     shortage = fare - card.balance
 
     if shortage <= 0:
-      shortage = 0
-      self._settling = False
+      self._reset()
       return False
 
     self._card = card
