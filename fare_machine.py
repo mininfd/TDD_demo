@@ -3,7 +3,14 @@ class FareMachine:
     self._fares = fares
     self._shortage = 0
     self._settling = False
+    self._card = None
+    self._reset()
 
+  def _reset(self):
+    self._settling = False
+    self._shortage = 0
+    self.card = None
+  
   def get_shortage(self) -> int:
     return self._shortage
 
@@ -19,6 +26,7 @@ class FareMachine:
       self._settling = False
       return False
 
+    self._card = card
     self._settling = True
     self._shortage = shortage
 
@@ -28,3 +36,7 @@ class FareMachine:
 
     if amount < self._shortage:
       return False
+
+    self._card.balance += amount
+    self._reset()
+    return True
