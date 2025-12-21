@@ -2,9 +2,13 @@ class FareMachine:
   def __init__(self, fares: dict[str, int]):
     self._fares = fares
     self._shortage = 0
+    self._settling = False
 
   def get_shortage(self) -> int:
     return self._shortage
+
+  def is_settling(self) -> bool:
+    return self._settling
   
   def start(self, card):
     fare = self._fares[card.entry_station]
@@ -12,5 +16,6 @@ class FareMachine:
 
     if shortage <= 0:
       shortage = 0
+      self._settling = False
 
     self._shortage = shortage
