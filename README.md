@@ -344,3 +344,180 @@ fare_machine.py
 +     self._reset()
       return False
 ```
+
+#### 8. ICカード同時精算不可
+
+テスト
+
+tests/test_fare_machine.py
+
+```python
+def test_cannot_handle_two_cards_at_once_but_after_settlement_second_card_can_start():
+  fares = {"A": 180, "B": 200}
+
+  card1 = ICCard(entry_station="A", balance=100)  # shortage=80
+  card2 = ICCard(entry_station="B", balance=150)  # shortage=50
+
+  m = FareMachine(fares)
+
+  # 1枚目精算可
+  assert m.start(card1) is True
+  assert m.is_settling() is True
+  assert m.get_shortage() == 80
+
+  # 2枚目精算不可
+  assert m.start(card2) is False
+  assert m.is_settling() is True
+  assert m.get_shortage() == 80
+
+  # 1枚目を精算完了 -> 初期状態
+  assert m.charge(80) is True
+  assert card1.balance == 180
+  assert m.is_settling() is False
+  assert m.get_shortage() == 0
+
+  # 初期状態なら2枚目精算開始
+  assert m.start(card2) is True
+  assert m.is_settling() is True
+  assert m.get_shortage() == 50
+```
+
+作成したコード差分
+
+fare_machine.py
+
+```diff
+@@ def _reset(self):
+
+-     self.card = None
++     self._card = None
+
+@@ def start(self, card):
+
++   if self._card is not None:
++     return False
+
+    self._shortage = shortage
++   return True
+```
+
+#### 9. ICカードに乗車駅の情報がない場合精算不可
+
+テスト
+
+tests/test_fare_machine.py
+
+以前のテストを誤って削除したが修正済
+
+```python
+def test_missing_entry_station_means_cannot_settle_and_back_to_idle():
+  fares = {"A": 180}
+  m = FareMachine(fares)
+
+  # entry_station が空（情報なし）
+  card = ICCard(entry_station="", balance=100)
+
+  assert m.start(card) is False
+  assert m.is_settling() is False
+  assert m.get_shortage() == 0
+  assert m.charge(100) is False
+  assert card.balance == 100
+```
+
+作成したコード差分
+
+fare_machine.py
+
+```diff
+@@ def start(self, card):
+
++   if not card.entry_station:
++     self._reset()
++     return False
+```
+
+#### 10. 運賃表に存在しない乗車駅のとき精算不可
+
+テスト
+
+tests/test_fare_machine.py
+
+以前のテストの一部分を誤って削除したが修正済
+
+```python
+def test_unknown_entry_station_means_cannot_settle_and_back_to_idle():
+  fares = {"A": 180}
+  m = FareMachine(fares)
+
+  # 運賃表に存在しない駅
+  card = ICCard(entry_station="Z", balance=100)
+
+  assert m.start(card) is False
+  assert m.is_settling() is False
+  assert m.get_shortage() == 0
+  assert m.charge(100) is False
+  assert card.balance == 100
+```
+
+作成したコード差分
+
+fare_machine.py
+
+```diff
+@@ def start(self, card):
+
++   if card.entry_station not in self._fares:
++     self._reset()
++     return False
+```
+
+#### 11. ICカードの残高,チャージ金額は0以上
+
+テスト
+
+tests/test_fare_machine.py
+
+```python
+def test_negative_balance_means_cannot_settle_and_back_to_idle():
+  fares = {"A": 180}
+  m = FareMachine(fares)
+
+  card = ICCard(entry_station="A", balance=-1)
+
+  assert m.start(card) is False
+  assert m.is_settling() is False
+  assert m.get_shortage() == 0
+  assert m.charge(100) is False
+  assert card.balance == -1  
+
+def test_negative_charge_amount_is_rejected_and_stays_settling():
+  fares = {"A": 180}
+  m = FareMachine(fares)
+
+  card = ICCard(entry_station="A", balance=100)  
+  assert m.start(card) is True
+  assert m.is_settling() is True
+  assert m.get_shortage() == 80
+
+  assert m.charge(-10) is False
+  assert card.balance == 100
+  assert m.is_settling() is True
+  assert m.get_shortage() == 80
+```
+
+作成したコード差分
+
+fare_machine.py
+
+```diff
+@@ def start(self, card):
+
++   if card.balance < 0:
++     self._reset()
++     return False
+
+@@ def charge(self, amount: int) -> bool:
+
++   if amount < 0:
++     return False
+```
