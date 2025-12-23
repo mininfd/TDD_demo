@@ -123,3 +123,16 @@ def test_missing_entry_station_means_cannot_settle_and_back_to_idle():
   assert m.get_shortage() == 0
   assert m.charge(100) is False
   assert card.balance == 100
+
+def test_unknown_entry_station_means_cannot_settle_and_back_to_idle():
+  fares = {"A": 180}
+  m = FareMachine(fares)
+
+  # 運賃表に存在しない駅
+  card = ICCard(entry_station="Z", balance=100)
+
+  assert m.start(card) is False
+  assert m.is_settling() is False
+  assert m.get_shortage() == 0
+  assert m.charge(100) is False
+  assert card.balance == 100
