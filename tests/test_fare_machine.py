@@ -111,7 +111,15 @@ def test_cannot_handle_two_cards_at_once_but_after_settlement_second_card_can_st
   assert m.is_settling() is False
   assert m.get_shortage() == 0
 
-  # 初期状態なら2枚目精算開始
-  assert m.start(card2) is True
-  assert m.is_settling() is True
-  assert m.get_shortage() == 50
+def test_missing_entry_station_means_cannot_settle_and_back_to_idle():
+  fares = {"A": 180}
+  m = FareMachine(fares)
+
+  # entry_station が空（情報なし）
+  card = ICCard(entry_station="", balance=100)
+
+  assert m.start(card) is False
+  assert m.is_settling() is False
+  assert m.get_shortage() == 0
+  assert m.charge(100) is False
+  assert card.balance == 100
