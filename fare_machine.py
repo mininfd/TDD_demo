@@ -25,6 +25,10 @@ class FareMachine:
     if not card.entry_station:
       self._reset()
       return False
+
+    if card.entry_station not in self._fares:
+      self._reset()
+      return False
     
     fare = self._fares[card.entry_station]
     shortage = fare - card.balance
