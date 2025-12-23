@@ -86,3 +86,32 @@ def test_enough_payment_charges_and_back_to_idle_overpay():
   assert card.balance == 200  # 100+100
   assert m.is_settling() is False
   assert m.get_shortage() == 0
+
+def test_cannot_handle_two_cards_at_once_but_after_settlement_second_card_can_start():
+  fares = {"A": 180, "B": 200}
+
+  card1 = ICCard(entry_station="A", balance=100)  # shortage=80
+  card2 = ICCard(entry_station="B", balance=150)  # shortage=50
+
+  m = FareMachine(fares)
+
+  # 1枚目精算可
+  assert m.start(card1) is True
+  assert m.is_settling() is True
+  assert m.get_shortage() == 80
+
+  # 2枚目精算不可
+  assert m.start(card2) is False
+  assert m.is_settling() is True
+  assert m.get_shortage() == 80
+
+  # 1枚目を精算完了 -> 初期状態
+  assert m.charge(80) is True
+  assert card1.balance == 180
+  assert m.is_settling() is False
+  assert m.get_shortage() == 0
+
+  # 初期状態なら2枚目精算開始
+  assert m.start(card2) is True
+  assert m.is_settling() is True
+  assert m.get_shortage() == 50
