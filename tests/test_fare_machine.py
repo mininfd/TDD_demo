@@ -136,3 +136,29 @@ def test_unknown_entry_station_means_cannot_settle_and_back_to_idle():
   assert m.get_shortage() == 0
   assert m.charge(100) is False
   assert card.balance == 100
+
+def test_negative_balance_means_cannot_settle_and_back_to_idle():
+  fares = {"A": 180}
+  m = FareMachine(fares)
+
+  card = ICCard(entry_station="A", balance=-1)
+
+  assert m.start(card) is False
+  assert m.is_settling() is False
+  assert m.get_shortage() == 0
+  assert m.charge(100) is False
+  assert card.balance == -1  
+
+def test_negative_charge_amount_is_rejected_and_stays_settling():
+  fares = {"A": 180}
+  m = FareMachine(fares)
+
+  card = ICCard(entry_station="A", balance=100)  
+  assert m.start(card) is True
+  assert m.is_settling() is True
+  assert m.get_shortage() == 80
+
+  assert m.charge(-10) is False
+  assert card.balance == 100
+  assert m.is_settling() is True
+  assert m.get_shortage() == 80
